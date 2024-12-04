@@ -1,5 +1,8 @@
 package com.only.flobizassignment.presentation.ui.navigation
 
+import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,11 +41,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.only.flobizassignment.R
 import com.only.flobizassignment.presentation.ui.DashboardScreen
+import com.only.flobizassignment.presentation.ui.ExpenseDetailScreen
 import com.only.flobizassignment.presentation.ui.LoginScreen
+import com.only.flobizassignment.presentation.ui.RecordExpenseScreen
 import com.only.flobizassignment.presentation.ui.SettingsScreen
 import com.only.flobizassignment.ui.theme.background
 import com.only.flobizassignment.ui.theme.colorSecondary
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNav() {
 
@@ -74,9 +80,9 @@ fun BottomNav() {
         bottomBar = {
             if (showBottomBar) {
                 Box(
-                    modifier = Modifier.padding(
-                        bottom = WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding())
+//                    modifier = Modifier.padding(
+//                        bottom = WindowInsets.navigationBars.asPaddingValues()
+//                            .calculateBottomPadding())
                 ) {
                     NavigationBar(
                         containerColor = Color.White,
@@ -156,6 +162,12 @@ fun BottomNav() {
                 composable(Routes.DashboardScreen.routes) {
                     DashboardScreen()
                 }
+                composable(Routes.RecordExpenseScreen.routes) {
+                    RecordExpenseScreen()
+                }
+                composable(Routes.ExpenseDetailScreen.routes) {
+                    ExpenseDetailScreen()
+                }
                 composable(Routes.SettingsScreen.routes) {
                     SettingsScreen()
                 }
@@ -166,6 +178,7 @@ fun BottomNav() {
 
 @Preview(showSystemUi = true)
 @Composable
+@RequiresApi(Build.VERSION_CODES.O)
 fun BottomNavPreview() {
     BottomNav()
 }
