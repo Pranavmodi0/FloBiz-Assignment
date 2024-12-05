@@ -34,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.rememberNavController
 import com.only.flobizassignment.R
+import com.only.flobizassignment.presentation.ui.navigation.Routes
 import com.only.flobizassignment.ui.theme.FloBizAssignmentTheme
 import com.only.flobizassignment.ui.theme.background
 import com.only.flobizassignment.ui.theme.colorPrimary
@@ -43,6 +45,8 @@ import com.only.flobizassignment.ui.theme.textColorSecondary
 
 @Composable
 fun DashboardScreen() {
+
+    val navigation = rememberNavController()
 
     FloBizAssignmentTheme {
         Scaffold(
@@ -113,7 +117,9 @@ fun DashboardScreen() {
             },
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    onClick = { },
+                    onClick = {
+                        navigation.navigate(Routes.RecordExpenseScreen.routes)
+                    },
                     icon = { Icon(Icons.Filled.Add, contentDescription = "Add New") },
                     text = { Text(text = "Add New") },
                     contentColor = Color.White,

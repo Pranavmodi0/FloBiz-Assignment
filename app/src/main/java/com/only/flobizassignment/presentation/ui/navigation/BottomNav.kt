@@ -1,6 +1,5 @@
 package com.only.flobizassignment.presentation.ui.navigation
 
-import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -8,11 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.NavigationBar
@@ -23,8 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +34,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.only.flobizassignment.R
 import com.only.flobizassignment.presentation.ui.DashboardScreen
 import com.only.flobizassignment.presentation.ui.ExpenseDetailScreen
@@ -48,9 +46,13 @@ import com.only.flobizassignment.presentation.ui.SettingsScreen
 import com.only.flobizassignment.ui.theme.background
 import com.only.flobizassignment.ui.theme.colorSecondary
 
+private lateinit var auth: FirebaseAuth
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomNav() {
+
+    auth = Firebase.auth
 
     val list = listOf(
         NavItem(
@@ -67,10 +69,21 @@ fun BottomNav() {
 
     val navController = rememberNavController()
 
+    val startDestination = if (auth.currentUser != null) {
+        Routes.DashboardScreen.routes
+    } else {
+        Routes.LoginScreen.routes
+    }
+
     val backStackEntry by navController.currentBackStackEntryAsState()
 
-    val showBottomBar by rememberSaveable {
+    var showBottomBar by rememberSaveable {
         mutableStateOf(true)
+    }
+
+    showBottomBar = when (backStackEntry?.destination?.route) {
+        Routes.LoginScreen.routes -> false
+        else -> true
     }
 
     Scaffold(
@@ -143,13 +156,6 @@ fun BottomNav() {
             }
         },
         content = { padding ->
-            val startDestinations = remember {
-                mutableStateOf(
-                    Routes.DashboardScreen.routes
-                )
-            }
-
-            val startDestination = startDestinations.value
 
             NavHost(
                 navController = navController,
@@ -157,7 +163,9 @@ fun BottomNav() {
                 modifier = Modifier.padding(padding),
             ) {
                 composable(Routes.LoginScreen.routes) {
-                    LoginScreen()
+                    LoginScreen(
+                        navController = rememberNavController()
+                    )
                 }
                 composable(Routes.DashboardScreen.routes) {
                     DashboardScreen()
