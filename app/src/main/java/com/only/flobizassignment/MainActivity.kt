@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.compose.rememberNavController
 import com.only.flobizassignment.presentation.ui.navigation.BottomNav
 import com.only.flobizassignment.ui.theme.FloBizAssignmentTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +23,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FloBizAssignmentTheme {
-                BottomNav()
+                BottomNav(
+                    navController = rememberNavController()
+                )
             }
         }
     }

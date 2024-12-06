@@ -2,9 +2,7 @@ package com.only.flobizassignment.presentation.model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
-import com.only.flobizassignment.data.repository.AuthRepository
 import com.only.flobizassignment.domain.GoogleLoginHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

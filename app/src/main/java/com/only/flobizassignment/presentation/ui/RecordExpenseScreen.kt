@@ -1,6 +1,9 @@
 package com.only.flobizassignment.presentation.ui
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,15 +14,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -30,6 +37,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,14 +47,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.only.flobizassignment.R
+import com.only.flobizassignment.data.Expense
+import com.only.flobizassignment.presentation.model.RecordExpenseUiState
+import com.only.flobizassignment.presentation.model.RecordExpenseViewModel
 import com.only.flobizassignment.ui.theme.background
 import com.only.flobizassignment.ui.theme.colorControlNormal
 import com.only.flobizassignment.ui.theme.colorSecondary
@@ -55,7 +72,26 @@ import java.time.LocalDate
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordExpenseScreen() {
+fun RecordExpenseScreen(
+    navController: NavController,
+    auth: FirebaseAuth,
+    viewModel: RecordExpenseViewModel = hiltViewModel(),
+) {
+
+    val context = LocalContext.current
+
+    val view = LocalView.current
+    val window = (view.context as Activity).window
+    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+
+    DisposableEffect(context) {
+        context.requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        onDispose {
+            context.requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val dateState = rememberDatePickerState()
     val millisToLocalDate = dateState.selectedDateMillis?.let {
@@ -69,12 +105,21 @@ fun RecordExpenseScreen() {
         mutableStateOf(false)
     }
 
+    var description by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+
+    val isButtonEnabled = dateToString.isNotEmpty() && description.isNotEmpty() && amount.isNotEmpty()
+
+
+    val radioOptions = listOf("Expense", "Income")
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
+
     Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 50.dp)
+                    .padding(top = 10.dp)
                     .background(Color.White)
             ) {
                 Row(
@@ -82,7 +127,10 @@ fun RecordExpenseScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        modifier = Modifier.size(30.dp),
+                        modifier = Modifier.size(30.dp)
+                            .clickable {
+                                navController.popBackStack()
+                            },
                         painter = painterResource(R.drawable.arrow_left),
                         contentDescription = "back"
                     )
@@ -98,9 +146,6 @@ fun RecordExpenseScreen() {
             }
         },
         content = { padding ->
-
-            val radioOptions = listOf("Expense", "Income")
-            val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
 
             Column(
                 modifier = Modifier
@@ -198,9 +243,6 @@ fun RecordExpenseScreen() {
                                         Button(
                                             onClick = {
                                                 datePickerShowing = false
-                                                millisToLocalDate?.let {
-                                                    dateToString
-                                                }
                                             }
                                         ) {
                                             Text(text = "OK")
@@ -217,23 +259,13 @@ fun RecordExpenseScreen() {
                                     DatePicker(state = dateState, showModeToggle = true)
                                 }
                             }
-                            if (dateToString.isEmpty()) {
-                                Text(
-                                    "Date Of Birth",
-                                    color = Color.Gray,
-                                    textAlign = TextAlign.Start,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            } else {
-                                Text(
-                                    text = dateToString,
-                                    color = textColorSecondary,
-                                    fontSize = 15.sp,
-                                    textAlign = TextAlign.Start,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(start = 20.dp)
-                                )
-                            }
+                            Text(
+                                text = dateToString.ifEmpty { "Select Date" },
+                                color = if (dateToString.isEmpty()) Color.Gray else textColorSecondary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 20.dp)
+                            )
 
                             Image(
                                 modifier = Modifier.padding(end = 20.dp),
@@ -262,28 +294,34 @@ fun RecordExpenseScreen() {
 
                         Spacer(modifier = Modifier.padding( top = 20.dp))
 
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
+                        BasicTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            textStyle = TextStyle(
+                                color = textColorSecondary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .height(50.dp)
                                 .background(Color.White, RoundedCornerShape(10.dp))
                                 .border(
                                     width = 1.dp,
                                     color = colorControlNormal,
                                     shape = RoundedCornerShape(10.dp)
-                                ),
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            BasicTextField(
-                                textStyle = TextStyle(
-                                    color = textColorSecondary,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                modifier = Modifier.padding(start = 20.dp),
-                                value = "Electric Bill",
-                                onValueChange = {},
-                            )
-                        }
+                                )
+                                .padding(10.dp),
+                            decorationBox = { innerTextField ->
+                                if (description.isEmpty()) {
+                                    Text(
+                                        text = "Enter description",
+                                        color = Color.Gray
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        )
                     }
                 }
 
@@ -305,7 +343,10 @@ fun RecordExpenseScreen() {
                             fontWeight = FontWeight.Bold
                         )
 
-                        Column {
+                        Column(
+                            modifier = Modifier.padding(end = 20.dp),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -319,26 +360,83 @@ fun RecordExpenseScreen() {
                                 Spacer(modifier = Modifier.padding(end = 10.dp))
 
                                 BasicTextField(
+                                    value = amount,
+                                    onValueChange = { amount = it },
                                     textStyle = TextStyle(
                                         color = textColorSecondary,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    value = "3500",
-                                    onValueChange = {},
+                                    decorationBox = { innerTextField ->
+                                        if (amount.isEmpty()) {
+                                            Text(
+                                                text = "Enter amount",
+                                                color = Color.Gray
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
                                 )
                             }
                         }
                     }
                 }
             }
+        },
+        bottomBar = {
+            Box(
+                modifier = Modifier.background(Color.White),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+
+                Button(
+                    onClick = {
+                        val expense = Expense(
+                            date = dateToString,
+                            description = description,
+                            amount = amount.toDoubleOrNull() ?: 0.0,
+                            type = selectedOption,
+                            uid = auth.currentUser!!.uid
+                        )
+                        viewModel.addExpense(expense)
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorSecondary),
+                    enabled = isButtonEnabled
+                ) {
+                    Text(
+                        text = "Save",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+
+                LaunchedEffect(uiState) {
+                    when (uiState) {
+                        is RecordExpenseUiState.Success -> {
+                            Toast.makeText(
+                                context,
+                                "Expense added successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        is RecordExpenseUiState.Error -> {
+                            Toast.makeText(
+                                context,
+                                "Failed to add expense!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        else -> Unit
+                    }
+                }
+            }
         }
     )
-}
-
-@Preview(showSystemUi = true)
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun RecordExpenseScreenPreview() {
-    RecordExpenseScreen()
 }
