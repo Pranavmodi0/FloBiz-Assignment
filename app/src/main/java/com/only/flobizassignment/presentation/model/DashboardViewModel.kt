@@ -1,7 +1,10 @@
 package com.only.flobizassignment.presentation.model
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.only.flobizassignment.data.Expenses
 import com.only.flobizassignment.data.repository.ExpenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +15,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val repository: ExpenseRepository
+    private val repository: ExpenseRepository,
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
 ) : ViewModel() {
 
     private val _expenses = MutableStateFlow<List<Expenses>>(emptyList())
@@ -31,6 +36,20 @@ class DashboardViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun deleteExpense(expense: Expenses) {
+        viewModelScope.launch {
+            firestore.collection("expenses")
+                .document(expense.id)
+                .delete()
+                .addOnSuccessListener {
+                    _expenses.value = _expenses.value - expense
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FirestoreError", "Error deleting document", e)
+                }
         }
     }
 }

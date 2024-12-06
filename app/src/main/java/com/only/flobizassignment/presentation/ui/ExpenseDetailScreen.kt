@@ -1,6 +1,5 @@
 package com.only.flobizassignment.presentation.ui
 
-import android.app.Activity
 import android.content.pm.ActivityInfo
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,12 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
@@ -49,6 +46,7 @@ import com.only.flobizassignment.presentation.model.ExpenseDetailViewModel
 import com.only.flobizassignment.ui.theme.background
 import com.only.flobizassignment.ui.theme.colorPrimaryVariant
 import com.only.flobizassignment.ui.theme.colorSecondary
+import com.only.flobizassignment.ui.theme.textColorPrimary
 import com.only.flobizassignment.ui.theme.textColorSecondary
 
 @Composable
@@ -60,10 +58,6 @@ fun ExpenseDetailScreen(
 ) {
 
     val context = LocalContext.current
-
-    val view = LocalView.current
-    val window = (view.context as Activity).window
-    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
 
     DisposableEffect(context) {
         context.requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
@@ -107,7 +101,8 @@ fun ExpenseDetailScreen(
                     Text(
                         text = "Record Expense",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = textColorPrimary
                     )
 
                     Row(

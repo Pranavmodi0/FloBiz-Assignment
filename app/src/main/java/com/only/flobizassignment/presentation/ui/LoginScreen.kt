@@ -46,10 +46,6 @@ fun LoginScreen(
 
     val context = LocalContext.current
 
-    val view = LocalView.current
-    val window = (view.context as Activity).window
-    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
-
     DisposableEffect(context) {
         context.requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         onDispose {
